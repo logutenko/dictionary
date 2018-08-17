@@ -14,15 +14,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Reader implements Supplier<List<String>> {
-    private URL url;
+    private String path;
     private String charset;
 
-    public Reader(String url) {
-        try {
-            this.url = new URL(url);
-        } catch (MalformedURLException e) {
-            System.err.println("Incorrect URL: " + e.getMessage());
-        }
+    public Reader(String path) {
+        this.path = path;
         charset = Charset.defaultCharset().name();
     }
 
@@ -30,6 +26,7 @@ public class Reader implements Supplier<List<String>> {
     public List<String> get() {
         Predicate<String> wordFilter = Pattern.compile("[а-я]{3,}").asPredicate();
         try {
+            URL url = new URL(path);
             URLConnection connection = url.openConnection();
             Pattern p = Pattern.compile("charset=(.*)");
             Matcher m = p.matcher(connection.getContentType());
@@ -43,6 +40,8 @@ public class Reader implements Supplier<List<String>> {
                         .filter(wordFilter)
                         .collect(Collectors.toList());
             }
+        } catch (MalformedURLException e) {
+            System.err.println("Incorrect URL: " + e.getMessage());
         } catch (IOException e) {
             System.err.println("Exception while reading URL: " + e.getMessage());
         }
