@@ -5,32 +5,29 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Main {
 
     public static void main(String[] args) {
         CommandLineHandler handler = new CommandLineHandler();
-        ConcurrentSkipListSet<String> dictionary = new ConcurrentSkipListSet<>();
         try {
             handler.parseArgs(args);
             Path input = Paths.get(handler.getInput());
             Path output = Paths.get(handler.getOutput());
-            ExecutorService executorService = Executors.newCachedThreadPool();
+            List<String> result;
             try (Stream<String> s = Files.lines(input)) {
-                s.forEach(url -> executorService.submit(new Reader(url, dictionary)));
+                result = s.map(url -> CompletableFuture.supplyAsync(new Reader(url)))
+                        .map(CompletableFuture::join)
+                        .flatMap(List::stream)
+                        .distinct()
+                        .sorted()
+                        .collect(Collectors.toList());
             }
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(10000, TimeUnit.MILLISECONDS)) {
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
-            }
-            Files.write(output, dictionary);
+            Files.write(output, result);
         } catch (ParseException | FileNotFoundException x) {
             System.err.println("Invalid arguments: " + x.getMessage());
         } catch (IOException x) {
