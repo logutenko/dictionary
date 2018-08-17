@@ -14,17 +14,17 @@ public class Main {
     public static void main(String[] args) {
         CommandLineHandler handler = new CommandLineHandler();
         ConcurrentSkipListSet<String> dictionary = new ConcurrentSkipListSet<>();
-         try {
+        try {
             handler.parseArgs(args);
             Path input = Paths.get(handler.getInput());
             Path output = Paths.get(handler.getOutput());
             ExecutorService executorService = Executors.newCachedThreadPool();
             try (Stream<String> s = Files.lines(input)) {
-                s.forEach(file -> executorService.submit(new Reader(file, dictionary)));
+                s.forEach(url -> executorService.submit(new Reader(url, dictionary)));
             }
             executorService.shutdown();
             try {
-                if (!executorService.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                if (!executorService.awaitTermination(10000, TimeUnit.MILLISECONDS)) {
                     executorService.shutdownNow();
                 }
             } catch (InterruptedException e) {

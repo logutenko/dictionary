@@ -1,5 +1,5 @@
-Files/file1.txt
-Files/file2.txt
-Files/file3.txt
-Files/file4.txt
-Files/file5.txt
+http://www.lib.ru/LITRA/PUSHKIN/sobr10_01.txt
+http://www.lib.ru/LITRA/PUSHKIN/balda.txt
+http://www.lib.ru/LITRA/PUSHKIN/dubrowskij.txt
+http://www.lib.ru/LITRA/PUSHKIN/p4.txt
+http://www.lib.ru/LITRA/PUSHKIN/p5.txt
