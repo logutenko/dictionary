@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Main {
@@ -19,17 +16,12 @@ public class Main {
             handler.parseArgs(args);
             Path input = Paths.get(handler.getInput());
             Path output = Paths.get(handler.getOutput());
-            List<String> result;
+            ConcurrentSkipListSet<String> dictionary = new ConcurrentSkipListSet<>();
             try (Stream<String> s = Files.lines(input)) {
-                result = s.map(url -> CompletableFuture.supplyAsync(new Reader(url)))
-                        .map(CompletableFuture::join)
-                        .filter(Objects::nonNull)
-                        .flatMap(List::stream)
-                        .distinct()
-                        .sorted()
-                        .collect(Collectors.toList());
+                s.map(url -> CompletableFuture.supplyAsync(new Reader(url)).thenAccept(dictionary::addAll))
+                        .forEach(CompletableFuture::join);
             }
-            Files.write(output, result);
+            Files.write(output, dictionary);
         } catch (ParseException | FileNotFoundException x) {
             System.err.println("Invalid arguments: " + x.getMessage());
         } catch (IOException x) {
