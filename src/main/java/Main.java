@@ -1,31 +1,21 @@
 import org.apache.commons.cli.ParseException;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.*;
-import java.util.stream.Stream;
 
 public class Main {
 
     public static void main(String[] args) {
         CommandLineHandler handler = new CommandLineHandler();
+        WordsCollector collector = new WordsCollector();
         try {
             handler.parseArgs(args);
-            Path input = Paths.get(handler.getInput());
-            Path output = Paths.get(handler.getOutput());
-            ConcurrentSkipListSet<String> dictionary = new ConcurrentSkipListSet<>();
-            try (Stream<String> s = Files.lines(input)) {
-                s.map(url -> CompletableFuture.supplyAsync(new Reader(url)).thenAccept(dictionary::addAll))
-                        .forEach(CompletableFuture::join);
-            }
-            Files.write(output, dictionary);
+            String input = handler.getInputFile();
+            String dictionary = handler.getDictionaryFile();
+            String anagrams = handler.getAnagramsFile();
+            collector.collectDictionary(input, dictionary);
+            collector.collectAnagrams(dictionary, anagrams);
         } catch (ParseException | FileNotFoundException x) {
             System.err.println("Invalid arguments: " + x.getMessage());
-        } catch (IOException x) {
-            System.err.println("General I/O exception: " + x.getMessage() + "\nException belongs to " + x.getClass());
         }
     }
 }
