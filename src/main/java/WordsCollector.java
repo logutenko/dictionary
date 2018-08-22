@@ -2,14 +2,30 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WordsCollector {
+
+    private static List<String> splitAnagrams(List<String> list) {
+        List<String> finalList = new ArrayList<>();
+        for (String base : list) {
+            String wordAnagrams = list.stream()
+                    .filter(word -> !word.equals(base))
+                    .collect(Collectors.joining(", "));
+            finalList.add(base + ": " + wordAnagrams);
+        }
+        return finalList;
+    }
+
+    private String transformToKey(String word) {
+        char[] baseline = word.toCharArray();
+        Arrays.sort(baseline);
+        return new String(baseline);
+    }
 
     public void collectDictionary(String inputFile, String outputFile) {
         ConcurrentSkipListSet<String> dictionary = new ConcurrentSkipListSet<>();
@@ -27,18 +43,15 @@ public class WordsCollector {
     public void collectAnagrams(String inputFile, String outputFile) {
         Path input = Paths.get(inputFile);
         Path output = Paths.get(outputFile);
-        CopyOnWriteArrayList<String> anagrams = new CopyOnWriteArrayList<>();
         try (Stream<String> s = Files.lines(input)) {
-            List<String> dictionary = s.collect(Collectors.toList());
-            dictionary.stream()
-                    .map(word -> CompletableFuture.supplyAsync(new Analyzer(dictionary
-                            .stream()
-                            .filter(x -> x.length() == word.length() && !x.equals(word)), word))
-                            .thenAccept(anagram -> {
-                                if (!anagram.isEmpty())
-                                    anagrams.add(word + ": " + anagram);
-                            }))
-                    .forEach(CompletableFuture::join);
+            Map<String, List<String>> draftAnagrams = new HashMap<>();
+            s.forEach(word -> draftAnagrams.computeIfAbsent(transformToKey(word), k -> new ArrayList<>()).add(word));
+            List<String> anagrams = draftAnagrams.values().stream()
+                    .filter(list -> list.size() > 1)
+                    .map(WordsCollector::splitAnagrams)
+                    .flatMap(Collection::stream)
+                    .sorted()
+                    .collect(Collectors.toList());
             Files.write(output, anagrams);
         } catch (IOException e) {
             System.err.println("General I/O exception: " + e.getMessage() + "\nException belongs to " + e.getClass());
