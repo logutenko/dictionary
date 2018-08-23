@@ -14,12 +14,11 @@ import static java.util.stream.Collectors.toSet;
 
 public class AnagramsCollector {
 
-    private static Set<String> splitAnagrams(Set<String> list) {
+    private Stream<String> splitAnagrams(Set<String> list) {
         return list.stream()
                 .map(base -> list.stream()
                         .filter(word -> !word.equals(base))
-                        .collect(joining(", ", base + ": ", "")))
-                .collect(toSet());
+                        .collect(joining(", ", base + ": ", "")));
     }
 
     private String transformToKey(String word) {
@@ -35,8 +34,7 @@ public class AnagramsCollector {
             Map<String, Set<String>> draftAnagrams = s.collect(groupingBy(this::transformToKey, toSet()));
             Set<String> anagrams = draftAnagrams.values().stream()
                     .filter(list -> list.size() > 1)
-                    .map(AnagramsCollector::splitAnagrams)
-                    .flatMap(Collection::stream)
+                    .flatMap(this::splitAnagrams)
                     .collect(toSet());
             Files.write(output, anagrams);
         } catch (IOException e) {
