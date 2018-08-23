@@ -38,7 +38,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>com.siberteam.test.dict.Main</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>

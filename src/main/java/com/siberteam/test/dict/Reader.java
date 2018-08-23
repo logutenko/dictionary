@@ -1,3 +1,5 @@
+package com.siberteam.test.dict;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 

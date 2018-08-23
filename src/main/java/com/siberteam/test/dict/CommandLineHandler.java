@@ -1,3 +1,5 @@
+package com.siberteam.test.dict;
+
 import org.apache.commons.cli.*;
 
 import java.io.File;
